@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}404 Page Not Found — Mock Interview AI{% endblock %}
+
+{% block content %}
+<div class="container" style="text-align: center; padding: 6rem 1rem 8rem;">
+  <div style="font-size: 4rem; font-weight: 800; font-family: var(--font-heading); color: var(--accent-primary); margin-bottom: 0.5rem;">404</div>
+  <h1 style="font-size: 2rem; margin-bottom: 1rem;">Page Not Found</h1>
+  <p style="max-width: 480px; margin: 0 auto 2rem; color: var(--text-secondary);">
+    The interview session or page you are trying to access does not exist or has been removed.
+  </p>
+  <a href="{{ url_for('main.index') }}" class="btn btn-primary">Return to Homepage</a>
+</div>
+{% endblock %}

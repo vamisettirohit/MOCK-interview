@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — Mock Interview AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container dashboard-container">
+
+  {% if db_error %}
+    <div class="alert alert-warning" role="alert">
+      <div>
+        <strong>Database Notice:</strong> MongoDB connection is currently offline. Please configure <code>MONGODB_URI</code> in your <code>.env</code> file to enable persistent storage and history tracking.
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Dashboard Header -->
+  <div class="dashboard-header">
+    <div class="dashboard-user-meta">
+      <div class="dashboard-avatar" aria-hidden="true">
+        {{ current_user.name[:1] | upper }}
+      </div>
+      <div>
+        <h1 class="dashboard-title">Candidate Performance Dashboard</h1>
+        <p class="dashboard-subtitle">
+          Welcome back, <strong>{{ current_user.name }}</strong> &bull; Target Track: 
+          <span class="badge badge-primary">{{ current_user.target_role or 'Software Engineer' }}</span>
+        </p>
+      </div>
+    </div>
+    <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+      <a href="{{ url_for('dashboard.history') }}" class="btn btn-secondary" id="dash-history-btn">
+        📜 View History
+      </a>
+      <a href="{{ url_for('interview.setup') }}" class="btn btn-primary btn-lg" id="dash-start-interview-btn">
+        + Start New Interview
+      </a>
+    </div>
+  </div>
+
+  <!-- Key Statistics Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" aria-hidden="true">🎯</div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.total }}</span>
+        <span class="stat-label">Total Interviews</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" aria-hidden="true">✅</div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.completed }}</span>
+        <span class="stat-label">Completed</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" aria-hidden="true">📊</div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.avg_score }}</span>
+        <span class="stat-label">Average Score</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" aria-hidden="true">🏆</div>
+      <div class="stat-info">
+        <span class="stat-value">{{ stats.best_score }}</span>
+        <span class="stat-label">Personal Best</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Performance by Category -->
+  {% if category_stats %}
+    <div class="glass-card">
+      <h2 style="font-size: 1.25rem; margin-bottom: 0.4rem;">Track Performance Breakdown</h2>
+      <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+        Average rubric scores across practiced technical and behavioral tracks.
+      </p>
+      
+      <div class="category-progress-grid">
+        {% for cat, data in category_stats.items() %}
+          <div class="category-stat-pill">
+            <div class="category-stat-header">
+              <span style="font-weight: 600; color: var(--text-primary);">{{ cat }}</span>
+              <span style="color: var(--accent-secondary); font-weight: 700;">{{ data.avg }}% ({{ data.count }} mocks)</span>
+            </div>
+            <div class="category-stat-bar">
+              <div class="category-stat-bar-fill" style="width: {{ [data.avg, 100] | min }}%;"></div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Recent Interview Activity Table -->
+  <div class="glass-card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+      <div>
+        <h2 style="font-size: 1.25rem; margin-bottom: 0.2rem;">Recent Mock Interviews</h2>
+        <p style="font-size: 0.88rem; color: var(--text-secondary);">Your latest practice sessions and AI scorecards.</p>
+      </div>
+      {% if interviews %}
+        <a href="{{ url_for('dashboard.history') }}" class="btn btn-outline btn-sm">
+          View All History ({{ interviews | length }}) →
+        </a>
+      {% endif %}
+    </div>
+
+    {% if interviews %}
+      <div class="history-table-wrapper">
+        <table class="history-table" aria-label="Recent Mock Interviews">
+          <thead>
+            <tr>
+              <th scope="col">Category</th>
+              <th scope="col">Difficulty</th>
+              <th scope="col">Date</th>
+              <th scope="col">Progress</th>
+              <th scope="col">Score</th>
+              <th scope="col">Status</th>
+              <th scope="col">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in interviews[:8] %}
+              <tr>
+                <td class="col-title">
+                  {{ item.category }}
+                  {% if item.job_role %}
+                    <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: normal;">{{ item.job_role }}</div>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="badge {% if item.difficulty == 'Easy' %}badge-easy{% elif item.difficulty == 'Medium' %}badge-medium{% else %}badge-hard{% endif %}">
+                    {{ item.difficulty }}
+                  </span>
+                </td>
+                <td>{{ item.created_at.strftime('%b %d, %Y') if item.created_at else 'Recent' }}</td>
+                <td>{{ item.completed_questions or 0 }} / {{ item.total_questions }} Qs</td>
+                <td>
+                  {% if item.overall_score %}
+                    <strong style="color: var(--text-primary); font-size: 1.05rem;">{{ item.overall_score }}</strong> 
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">/100</span>
+                  {% else %}
+                    <span style="color: var(--text-muted);">&mdash;</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if item.status == 'completed' %}
+                    <span class="badge badge-easy">Completed</span>
+                  {% else %}
+                    <span class="badge badge-medium">In Progress</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if item.status == 'completed' %}
+                    <a href="{{ url_for('interview.report_view', interview_id=item._id) }}" class="btn btn-outline btn-sm">
+                      View Report
+                    </a>
+                  {% else %}
+                    <a href="{{ url_for('interview.session_view', interview_id=item._id) }}" class="btn btn-primary btn-sm">
+                      Resume
+                    </a>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state-box">
+        <div class="empty-state-icon" aria-hidden="true">🎙️</div>
+        <h3 class="empty-state-title">No Mock Interviews Taken Yet</h3>
+        <p class="empty-state-desc">
+          Ready to prepare for real-world interviews? Choose your category, difficulty, and job role to launch an interactive session powered by Groq AI.
+        </p>
+        <a href="{{ url_for('interview.setup') }}" class="btn btn-primary btn-lg">
+          Launch Your First Mock Interview →
+        </a>
+      </div>
+    {% endif %}
+
+  </div>
+
+</div>
+{% endblock %}

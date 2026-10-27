@@ -1,0 +1,360 @@
+{% extends "base.html" %}
+
+{% block title %}Live Face-to-Face Interview — {{ interview.category }} ({{ interview.difficulty }}){% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/interview.css') }}">
+{% endblock %}
+
+{% block content %}
+<div id="interview-meta" data-id="{{ interview_id }}" style="display: none;"></div>
+
+<div class="container session-layout">
+  
+  <!-- Top Session Navigation & Status Bar -->
+  <div class="session-topbar">
+    <div class="session-meta">
+      <a href="{{ url_for('dashboard.index') }}" class="exit-link" title="Return to Dashboard">
+        ← Exit
+      </a>
+      <span class="badge badge-primary">{{ interview.category }}</span>
+      <span class="badge {% if interview.difficulty in ['Easy', 'Beginner'] %}badge-easy{% elif interview.difficulty in ['Medium', 'Intermediate'] %}badge-medium{% else %}badge-hard{% endif %}">
+        {{ interview.difficulty }}
+      </span>
+      {% if interview.branch %}
+        <span class="badge badge-branch">
+          {{ interview.branch }}
+        </span>
+      {% endif %}
+      {% if interview.experience_level %}
+        <span class="badge badge-exp">
+          {{ interview.experience_level }}
+        </span>
+      {% endif %}
+      {% if interview.job_role %}
+        <span class="badge badge-role">
+          {{ interview.job_role }}
+        </span>
+      {% endif %}
+    </div>
+
+    <div class="session-counter-box">
+      <span class="question-tracker">
+        Question <span id="question-num">1</span> of <span id="question-total">{{ interview.total_questions }}</span>
+      </span>
+      <span id="progress-percent-text" class="progress-percent">0%</span>
+    </div>
+  </div>
+
+  <!-- Progress Bar Container -->
+  <div class="progress-bar-container" role="progressbar" aria-label="Interview Progress">
+    <div class="progress-bar-fill" id="progress-fill" style="width: 0%;"></div>
+  </div>
+
+  <!-- Alert Banner for Network / Rate-limit Errors -->
+  <div class="alert alert-danger" id="session-error-alert" style="display: none;" role="alert">
+    <span>⚠️ <span id="session-error-text"></span></span>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- VIDEO INTERVIEW STAGE: AI Interviewer Tile & Candidate Self-View Tile      -->
+  <!-- ========================================================================= -->
+  <div class="video-stage-grid">
+    
+    <!-- Tile 1: AI Interviewer Avatar Feed -->
+    <div class="video-tile ai-video-tile" id="ai-video-tile">
+      <div class="tile-header">
+        <div class="tile-title">
+          <span class="avatar-status-dot" id="ai-status-dot"></span>
+          <span class="tile-name">AI Technical Interviewer</span>
+        </div>
+        <span class="status-pill status-ready" id="ai-status-pill">Ready</span>
+      </div>
+
+      <!-- Central Visual Avatar -->
+      <div class="avatar-stage">
+        <div class="avatar-rings" id="avatar-rings">
+          <div class="avatar-ring ring-1"></div>
+          <div class="avatar-ring ring-2"></div>
+          <div class="avatar-ring ring-3"></div>
+        </div>
+
+        <div class="avatar-visual" id="avatar-visual">
+          <svg viewBox="0 0 120 120" class="avatar-svg" aria-label="AI Interviewer Visual Representation">
+            <defs>
+              <linearGradient id="aiGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#6366f1" />
+                <stop offset="50%" stop-color="#06b6d4" />
+                <stop offset="100%" stop-color="#3b82f6" />
+              </linearGradient>
+              <filter id="aiGlow">
+                <feGaussianBlur stdDeviation="3" result="glow"/>
+                <feComposite in="SourceGraphic" in2="glow" operator="over"/>
+              </filter>
+            </defs>
+            <!-- Outer Halo -->
+            <circle cx="60" cy="60" r="54" fill="none" stroke="url(#aiGradient)" stroke-width="2" opacity="0.4" stroke-dasharray="4 2"/>
+            <!-- Avatar Body & Head Silhouette -->
+            <circle cx="60" cy="46" r="22" fill="#141c2e" stroke="url(#aiGradient)" stroke-width="2.5" />
+            <path d="M26,98 C26,76 40,68 60,68 C80,68 94,76 94,98 Z" fill="#141c2e" stroke="url(#aiGradient)" stroke-width="2.5" />
+            <!-- Neural Visor / Interface Glow -->
+            <rect x="44" y="42" width="32" height="7" rx="3.5" fill="url(#aiGradient)" filter="url(#aiGlow)" />
+            <!-- Node Connectivity Points -->
+            <circle cx="48" cy="45.5" r="1.5" fill="#ffffff" />
+            <circle cx="60" cy="45.5" r="1.5" fill="#ffffff" />
+            <circle cx="72" cy="45.5" r="1.5" fill="#ffffff" />
+          </svg>
+        </div>
+
+        <!-- Soundwave Animation when AI is Speaking -->
+        <div class="soundwave-container" id="soundwave-container" aria-hidden="true">
+          <div class="soundwave-bar"></div>
+          <div class="soundwave-bar"></div>
+          <div class="soundwave-bar"></div>
+          <div class="soundwave-bar"></div>
+          <div class="soundwave-bar"></div>
+          <div class="soundwave-bar"></div>
+          <div class="soundwave-bar"></div>
+        </div>
+      </div>
+
+      <!-- AI Voice Controls -->
+      <div class="ai-voice-controls">
+        <button type="button" class="btn-voice-ctrl" id="tts-play-btn" title="Hear AI Interviewer speak this question">
+          <span class="voice-icon" id="tts-icon">🔊</span>
+          <span id="tts-btn-text">Hear Question</span>
+        </button>
+        <button type="button" class="btn-voice-ctrl" id="tts-replay-btn" title="Replay AI question from beginning">
+          <span>🔄</span> Replay Question
+        </button>
+        <button type="button" class="btn-voice-ctrl" id="tts-stop-btn" style="display: none;" title="Stop AI voice">
+          <span>⏹</span> Stop Voice
+        </button>
+        <label class="auto-speak-toggle" title="Automatically speak questions when they appear">
+          <input type="checkbox" id="auto-speak-checkbox" checked>
+          <span>Auto-speak</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Tile 2: Candidate Video Self-View (Webcam) -->
+    <div class="video-tile candidate-video-tile" id="candidate-video-tile">
+      <div class="tile-header">
+        <div class="tile-title">
+          <span class="avatar-status-dot candidate-dot" id="candidate-status-dot"></span>
+          <span class="tile-name">Candidate Self-View</span>
+        </div>
+        <span class="status-pill status-camera-off" id="camera-status-pill">Camera Standby</span>
+      </div>
+
+      <!-- Candidate Camera Screen Area -->
+      <div class="candidate-screen-area">
+        <video id="candidate-webcam" class="candidate-video-feed" autoplay playsinline muted style="display: none;"></video>
+        
+        <div class="camera-placeholder" id="camera-placeholder">
+          <div class="placeholder-avatar">
+            <span class="placeholder-icon">👤</span>
+          </div>
+          <p class="placeholder-text">Camera Preview (Optional)</p>
+          <span class="placeholder-sub">Click below to activate your webcam for a realistic interview feel</span>
+        </div>
+
+        <div class="mic-live-badge" id="mic-live-badge" style="display: none;">
+          <span class="mic-live-dot"></span>
+          <span>MIC LIVE</span>
+        </div>
+      </div>
+
+      <!-- Candidate Device Toolbar -->
+      <div class="candidate-toolbar">
+        <button type="button" class="btn-tool-ctrl" id="toggle-camera-btn">
+          <span id="camera-icon">📷</span>
+          <span id="camera-btn-text">Turn Camera On</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- QUESTION & TRANSCRIPT WORKSPACE                                          -->
+  <!-- ========================================================================= -->
+  <div class="question-box" id="question-card">
+    <div class="question-num-tag">
+      <span aria-hidden="true">🤖</span>
+      <span>Current Question Prompt</span>
+    </div>
+    
+    <div class="question-text" id="question-text">
+      Connecting to Groq AI inference...
+    </div>
+
+    <div class="question-hint" id="question-hint-box" style="display: none;">
+      <span aria-hidden="true">💡 </span>
+      <span id="question-hint-text"></span>
+    </div>
+
+    <!-- Candidate Speech-to-Text & Answer Workspace -->
+    <div class="editor-container">
+      
+      <!-- Prominent Microphone Control Bar -->
+      <div class="mic-console-section">
+        <div class="mic-hero-container">
+          <button type="button" class="mic-hero-btn" id="mic-toggle-btn" aria-label="Toggle Microphone Recording">
+            <div class="mic-pulse-ring"></div>
+            <div class="mic-icon-circle">
+              <svg viewBox="0 0 24 24" class="mic-svg" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 1a4 4 0 0 0-4 4v7a4 4 0 0 0 8 0V5a4 4 0 0 0-4-4z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+            </div>
+          </button>
+          <div class="mic-hero-label">
+            <span class="mic-status-title" id="mic-status-title">Click to Start Speaking</span>
+            <span class="mic-status-subtitle" id="mic-status-subtitle">Browser Speech-to-Text will transcribe your answer</span>
+          </div>
+          <div class="live-audio-meter" id="live-audio-meter" style="display: none;" aria-hidden="true">
+            <span class="audio-meter-bar bar-1"></span>
+            <span class="audio-meter-bar bar-2"></span>
+            <span class="audio-meter-bar bar-3"></span>
+            <span class="audio-meter-bar bar-4"></span>
+            <span class="audio-meter-bar bar-5"></span>
+          </div>
+        </div>
+
+        <!-- Microphone Controls Row -->
+        <div class="mic-controls-row">
+          <button type="button" class="btn-mic-action btn-start" id="start-listening-btn">
+            ▶ Start Listening
+          </button>
+          <button type="button" class="btn-mic-action btn-stop" id="stop-listening-btn" disabled>
+            ⏹ Stop Listening
+          </button>
+          <button type="button" class="btn-mic-action btn-cancel" id="cancel-recording-btn" disabled>
+            ✕ Cancel Recording
+          </button>
+          <button type="button" class="btn-mic-action btn-clear" id="clear-transcript-btn">
+            🗑 Clear Transcript
+          </button>
+        </div>
+
+        <!-- Live STT State Pill & Interim Banner -->
+        <div class="stt-banner-box">
+          <span class="stt-status-pill status-idle" id="stt-status-pill">Microphone Ready</span>
+          <div class="interim-stream" id="interim-stream" style="display: none;">
+            <span class="interim-label">Listening:</span>
+            <span class="interim-text" id="interim-text">...</span>
+          </div>
+        </div>
+
+        <!-- Browser Fallback Warning (if unsupported or denied) -->
+        <div class="alert alert-warning stt-fallback-alert" id="stt-fallback-alert" style="display: none;" role="alert">
+          <span>ℹ️ <span id="stt-fallback-text">Speech recognition is not supported in this browser. You can type your answer directly in the text editor below.</span></span>
+        </div>
+      </div>
+
+      <!-- Editable Answer & Transcript Textarea -->
+      <div class="transcript-editor-box">
+        <div class="editor-header">
+          <label for="answer-input" class="form-label" style="margin-bottom: 0;">
+            Transcribed Answer (Editable — Review or Type Directly):
+          </label>
+          <span id="min-char-hint" class="min-char-hint">
+            (Minimum 5 characters required to submit)
+          </span>
+        </div>
+
+        <textarea 
+          id="answer-input" 
+          class="answer-textarea" 
+          placeholder="Your spoken answer will appear here in real time. You can also type or edit text directly before submitting..."
+          rows="7"
+          aria-label="Candidate Response Transcript"
+        ></textarea>
+
+        <div class="editor-footer">
+          <div class="word-count">
+            <span id="word-count">0 words</span> &bull; <span id="char-count">0 characters</span>
+          </div>
+          <div>
+            <button type="button" class="btn btn-primary" id="submit-answer-btn" disabled>
+              <span class="spinner" id="btn-spinner" style="display: none;" aria-hidden="true"></span>
+              <span id="btn-text">Submit Answer for AI Evaluation</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="privacy-note">
+          <span>🔒 Speech-to-text runs directly in your browser. Audio is not recorded or stored on any server.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Real-time AI Evaluation Card (Initially Hidden) -->
+  <div class="feedback-card" id="feedback-card" style="display: none;">
+    <div class="score-display">
+      <div class="score-circle">
+        <span class="score-val" id="score-val">--</span>
+        <span class="score-label">Score</span>
+      </div>
+      <div>
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
+          <h2 style="font-size: 1.3rem;">Evaluation &amp; Rubric Feedback</h2>
+          <span id="score-rating-badge" class="badge badge-easy">--</span>
+          <span id="classification-badge" class="badge" style="display: none;">--</span>
+        </div>
+        <p id="overall-feedback-text" style="color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5;"></p>
+      </div>
+    </div>
+
+    <!-- Strengths & Mistakes Grid -->
+    <div class="feedback-grid">
+      <div class="feedback-column">
+        <h3 style="color: var(--success); font-size: 0.95rem;">
+          <span aria-hidden="true">🟢</span> Key Strengths &amp; Accurate Concepts
+        </h3>
+        <ul class="feedback-list strengths" id="strengths-list"></ul>
+      </div>
+
+      <div class="feedback-column">
+        <h3 style="color: var(--warning); font-size: 0.95rem;">
+          <span aria-hidden="true">🟡</span> Mistakes &amp; Missing Concepts
+        </h3>
+        <ul class="feedback-list improvements" id="weaknesses-list"></ul>
+      </div>
+    </div>
+
+    <!-- Model Improved Sample Answer -->
+    <div id="model-answer-box" style="display: none; margin-top: 1rem; background: rgba(6, 182, 212, 0.08); border: 1px solid rgba(6, 182, 212, 0.25); border-radius: var(--radius-md); padding: 1.15rem 1.25rem;">
+      <h3 style="color: var(--accent-secondary); font-size: 0.9rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+        <span>🎯</span> Exemplary Model Answer
+      </h3>
+      <p id="model-answer-text" style="font-size: 0.92rem; color: var(--text-primary); line-height: 1.6; margin: 0;"></p>
+    </div>
+
+    <!-- Actionable Suggestions -->
+    <div id="suggestions-box" style="display: none; margin-top: 1rem; background: rgba(99, 102, 241, 0.06); border: 1px solid rgba(99, 102, 241, 0.2); border-radius: var(--radius-md); padding: 1rem 1.25rem;">
+      <h3 style="color: var(--text-accent); font-size: 0.9rem; margin-bottom: 0.5rem;">
+        💡 Actionable Recommendations
+      </h3>
+      <ul class="feedback-list" id="suggestions-list" style="margin-left: 0.5rem;"></ul>
+    </div>
+
+    <!-- Next Action Bar -->
+    <div style="margin-top: 1.75rem; display: flex; justify-content: flex-end;">
+      <button type="button" class="btn btn-primary btn-lg" id="next-action-btn">
+        <span class="spinner" id="next-btn-spinner" style="display: none;" aria-hidden="true"></span>
+        <span id="next-btn-text">Proceed to Next Question →</span>
+      </button>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/interview.js') }}"></script>
+{% endblock %}

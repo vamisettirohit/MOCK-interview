@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Log In — Mock Interview AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-icon" aria-hidden="true">🔑</div>
+      <h1 class="auth-title">Welcome Back</h1>
+      <p class="auth-subtitle">Log in to resume your AI mock interview sessions</p>
+    </div>
+
+    <!-- Client-side Error Alert -->
+    <div class="auth-alert" id="auth-error-alert" style="display: none;" role="alert">
+      <span aria-hidden="true">⚠️</span>
+      <span id="auth-error-text"></span>
+    </div>
+
+    <form method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}" id="auth-form" novalidate>
+      <div class="form-group">
+        <label for="email" class="form-label">Email Address</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          class="form-control" 
+          placeholder="student@university.edu" 
+          value="{{ email or '' }}" 
+          required 
+          autocomplete="email"
+          aria-required="true"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">Password</label>
+        <div class="password-input-group">
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            class="form-control" 
+            placeholder="••••••••" 
+            required 
+            autocomplete="current-password"
+            aria-required="true"
+          >
+          <button type="button" class="password-toggle-btn" data-target="password" aria-label="Toggle password visibility">
+            👁️
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1.25rem;" id="auth-submit-btn">
+        <span class="spinner btn-spinner" style="display: none;" aria-hidden="true"></span>
+        <span class="btn-text">Log In to Account</span>
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      Don't have an account yet? 
+      <a href="{{ url_for('auth.register') }}">Create an account</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+{% endblock %}

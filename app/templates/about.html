@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}About Project — Mock Interview AI{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 900px; margin: 3.5rem auto 5rem;">
+  <div class="glass-card" style="padding: 3rem;">
+    <h1 style="margin-bottom: 1rem;">About Mock Interview AI</h1>
+    <p style="font-size: 1.1rem; margin-bottom: 2rem;">
+      Mock Interview AI is a college capstone project designed to bridge the gap between academic preparation and industry technical interviews.
+    </p>
+
+    <h2 style="font-size: 1.5rem; margin: 2rem 0 1rem; color: var(--accent-secondary);">Technology Architecture</h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); padding: 1.25rem; border-radius: var(--radius-md);">
+        <strong style="color: var(--text-primary); display: block; margin-bottom: 0.25rem;">Backend Engine</strong>
+        <span style="font-size: 0.9rem; color: var(--text-secondary);">Python 3.12, Flask, Modular Blueprints, Application Factory pattern</span>
+      </div>
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); padding: 1.25rem; border-radius: var(--radius-md);">
+        <strong style="color: var(--text-primary); display: block; margin-bottom: 0.25rem;">Database</strong>
+        <span style="font-size: 0.9rem; color: var(--text-secondary);">MongoDB Atlas cloud cluster via PyMongo with indexed user &amp; interview documents</span>
+      </div>
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); padding: 1.25rem; border-radius: var(--radius-md);">
+        <strong style="color: var(--text-primary); display: block; margin-bottom: 0.25rem;">AI Inference</strong>
+        <span style="font-size: 0.9rem; color: var(--text-secondary);">Groq Cloud API leveraging high-speed Llama 3 models with JSON schema enforcement</span>
+      </div>
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); padding: 1.25rem; border-radius: var(--radius-md);">
+        <strong style="color: var(--text-primary); display: block; margin-bottom: 0.25rem;">Security</strong>
+        <span style="font-size: 0.9rem; color: var(--text-secondary);">Werkzeug cryptographic password hashing, HTTP-only signed session cookies, input sanitation</span>
+      </div>
+    </div>
+
+    <h2 style="font-size: 1.5rem; margin: 2rem 0 1rem; color: var(--accent-secondary);">Evaluation Methodology</h2>
+    <p style="margin-bottom: 1rem;">
+      Each student submission is passed through Groq's high-speed inference engine using a multi-criteria grading rubric:
+    </p>
+    <ul style="list-style-type: square; padding-left: 1.5rem; margin-bottom: 2rem; color: var(--text-secondary); line-height: 1.8;">
+      <li><strong>Technical Accuracy (40%):</strong> Verifies correctness of algorithms, design patterns, protocols, and conceptual principles.</li>
+      <li><strong>Depth &amp; Completeness (30%):</strong> Assesses whether edge cases, performance trade-offs, and scalability limitations are addressed.</li>
+      <li><strong>Clarity &amp; Structure (30%):</strong> Analyzes communication flow, conciseness, and professional articulation.</li>
+    </ul>
+
+    <div style="text-align: center; margin-top: 3rem;">
+      <a href="{{ url_for('interview.setup') if current_user else url_for('auth.register') }}" class="btn btn-primary btn-lg">
+        Start Practicing Today →
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock %}

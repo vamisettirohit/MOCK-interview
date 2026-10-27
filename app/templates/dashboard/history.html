@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Interview History — Mock Interview AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container dashboard-container">
+
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div>
+      <div style="margin-bottom: 0.35rem;">
+        <a href="{{ url_for('dashboard.index') }}" style="font-size: 0.88rem; color: var(--accent-secondary);">
+          ← Back to Dashboard
+        </a>
+      </div>
+      <h1 class="dashboard-title">Interview History &amp; Records</h1>
+      <p class="dashboard-subtitle">
+        Review your complete log of technical and behavioral mock interview sessions.
+      </p>
+    </div>
+    <a href="{{ url_for('interview.setup') }}" class="btn btn-primary btn-lg" id="history-start-interview-btn">
+      + New Interview Session
+    </a>
+  </div>
+
+  <!-- Summary Stats Row -->
+  <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
+    <div class="stat-card" style="padding: 1.1rem 1.25rem;">
+      <div class="stat-icon" style="width: 42px; height: 42px; font-size: 1.2rem;">📁</div>
+      <div class="stat-info">
+        <span class="stat-value" style="font-size: 1.6rem;">{{ stats.total }}</span>
+        <span class="stat-label">Total Recorded</span>
+      </div>
+    </div>
+    <div class="stat-card" style="padding: 1.1rem 1.25rem;">
+      <div class="stat-icon" style="width: 42px; height: 42px; font-size: 1.2rem;">🏁</div>
+      <div class="stat-info">
+        <span class="stat-value" style="font-size: 1.6rem;">{{ stats.completed }}</span>
+        <span class="stat-label">Completed</span>
+      </div>
+    </div>
+    <div class="stat-card" style="padding: 1.1rem 1.25rem;">
+      <div class="stat-icon" style="width: 42px; height: 42px; font-size: 1.2rem;">⭐</div>
+      <div class="stat-info">
+        <span class="stat-value" style="font-size: 1.6rem;">{{ stats.avg_score }}</span>
+        <span class="stat-label">Average Score</span>
+      </div>
+    </div>
+  </div>
+
+  {% if interviews %}
+    <div class="glass-card">
+      
+      <!-- Filter Toolbar -->
+      <div class="filter-toolbar">
+        <div class="filter-controls">
+          <input 
+            type="search" 
+            id="history-search" 
+            class="filter-input" 
+            placeholder="🔍 Search track or role..." 
+            aria-label="Search interviews"
+          >
+
+          <select id="history-category-filter" class="filter-input" aria-label="Filter by category">
+            <option value="all">All Tracks</option>
+            <option value="Technical">Technical</option>
+            <option value="HR">HR &amp; Behavioral</option>
+            <option value="Aptitude">Aptitude</option>
+            <option value="Communication">Communication</option>
+            <option value="Mixed">Mixed</option>
+          </select>
+
+          <select id="history-difficulty-filter" class="filter-input" aria-label="Filter by difficulty">
+            <option value="all">All Difficulties</option>
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+            <option value="Beginner">Beginner</option>
+            <option value="Intermediate">Intermediate</option>
+            <option value="Advanced">Advanced</option>
+          </select>
+
+          <select id="history-status-filter" class="filter-input" aria-label="Filter by status">
+            <option value="all">All Statuses</option>
+            <option value="completed">Completed</option>
+            <option value="in_progress">In Progress</option>
+          </select>
+
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 1rem;">
+          <span id="history-filtered-count" style="font-size: 0.85rem; color: var(--text-muted);">
+            Showing {{ interviews | length }} sessions
+          </span>
+          <button type="button" class="btn btn-secondary btn-sm" id="history-reset-filters">
+            Reset
+          </button>
+        </div>
+      </div>
+
+      <!-- History Table -->
+      <div class="history-table-wrapper">
+        <table class="history-table" aria-label="Complete Mock Interview History">
+          <thead>
+            <tr>
+              <th scope="col">Track &amp; Target Role</th>
+              <th scope="col">Difficulty</th>
+              <th scope="col">Date</th>
+              <th scope="col">Questions</th>
+              <th scope="col">Overall Score</th>
+              <th scope="col">Status</th>
+              <th scope="col">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in interviews %}
+              <tr 
+                class="history-row" 
+                data-category="{{ item.category }}" 
+                data-difficulty="{{ item.difficulty }}" 
+                data-status="{{ item.status }}"
+              >
+                <td class="col-title">
+                  {{ item.category }}
+                  {% if item.job_role %}
+                    <div style="font-size: 0.78rem; color: var(--text-muted); font-weight: normal;">
+                      Role: {{ item.job_role }}
+                    </div>
+                  {% endif %}
+                  {% if item.topic %}
+                    <div style="font-size: 0.78rem; color: var(--accent-secondary); font-weight: normal;">
+                      Focus: {{ item.topic }}
+                    </div>
+                  {% endif %}
+                </td>
+                <td>
+                  <span class="badge {% if item.difficulty == 'Easy' %}badge-easy{% elif item.difficulty == 'Medium' %}badge-medium{% else %}badge-hard{% endif %}">
+                    {{ item.difficulty }}
+                  </span>
+                </td>
+                <td>
+                  {{ item.created_at.strftime('%b %d, %Y') if item.created_at else 'Recent' }}
+                  <div style="font-size: 0.75rem; color: var(--text-muted);">
+                    {{ item.created_at.strftime('%I:%M %p') if item.created_at else '' }}
+                  </div>
+                </td>
+                <td>{{ item.completed_questions or 0 }} / {{ item.total_questions }} Qs</td>
+                <td>
+                  {% if item.overall_score %}
+                    <strong style="color: var(--text-primary); font-size: 1.05rem;">{{ item.overall_score }}</strong> 
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">/100</span>
+                  {% else %}
+                    <span style="color: var(--text-muted);">&mdash;</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if item.status == 'completed' %}
+                    <span class="badge badge-easy">Completed</span>
+                  {% else %}
+                    <span class="badge badge-medium">In Progress</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if item.status == 'completed' %}
+                    <a href="{{ url_for('interview.report_view', interview_id=item._id) }}" class="btn btn-outline btn-sm">
+                      View Scorecard
+                    </a>
+                  {% else %}
+                    <div style="display: flex; gap: 0.35rem; align-items: center;">
+                      <a href="{{ url_for('interview.session_view', interview_id=item._id) }}" class="btn btn-primary btn-sm">
+                        Resume
+                      </a>
+                      {% if item.completed_questions and item.completed_questions > 0 %}
+                        <a href="{{ url_for('interview.report_view', interview_id=item._id) }}" class="btn btn-outline btn-sm" title="Review answered questions">
+                          Review
+                        </a>
+                      {% endif %}
+                    </div>
+                  {% endif %}
+                </td>
+
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- No Match State -->
+      <div id="history-no-match" style="display: none; text-align: center; padding: 3rem 1rem;">
+        <div style="font-size: 2.25rem; margin-bottom: 0.75rem;">🔍</div>
+        <h3 style="font-size: 1.2rem; margin-bottom: 0.35rem;">No Matching Sessions Found</h3>
+        <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1rem;">
+          Try adjusting your search terms or filters to locate specific sessions.
+        </p>
+      </div>
+
+    </div>
+  {% else %}
+    <div class="empty-state-box">
+      <div class="empty-state-icon" aria-hidden="true">📜</div>
+      <h2 class="empty-state-title">No Practice Records Found</h2>
+      <p class="empty-state-desc">
+        You haven't initiated any interview sessions yet. Launch your first mock session to begin tracking your preparation metrics over time.
+      </p>
+      <a href="{{ url_for('interview.setup') }}" class="btn btn-primary btn-lg">
+        Start First Interview →
+      </a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/history.js') }}"></script>
+{% endblock %}

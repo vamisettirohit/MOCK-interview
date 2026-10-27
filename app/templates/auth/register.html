@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account — Mock Interview AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-icon" aria-hidden="true">🚀</div>
+      <h1 class="auth-title">Create Account</h1>
+      <p class="auth-subtitle">Join Mock Interview AI to train with AI-tailored questions</p>
+    </div>
+
+    <!-- Client-side Error Alert -->
+    <div class="auth-alert" id="auth-error-alert" style="display: none;" role="alert">
+      <span aria-hidden="true">⚠️</span>
+      <span id="auth-error-text"></span>
+    </div>
+
+    <form method="POST" action="{{ url_for('auth.register') }}" id="auth-form" novalidate>
+      <div class="form-group">
+        <label for="name" class="form-label">Full Name</label>
+        <input 
+          type="text" 
+          id="name" 
+          name="name" 
+          class="form-control" 
+          placeholder="Alex Rivera" 
+          value="{{ name or '' }}" 
+          required 
+          autocomplete="name"
+          aria-required="true"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="email" class="form-label">Email Address</label>
+        <input 
+          type="email" 
+          id="email" 
+          name="email" 
+          class="form-control" 
+          placeholder="alex@university.edu" 
+          value="{{ email or '' }}" 
+          required 
+          autocomplete="email"
+          aria-required="true"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="target_role" class="form-label">Target Role Focus</label>
+        <select id="target_role" name="target_role" class="form-control">
+          <option value="Software Engineer" {% if target_role == 'Software Engineer' or not target_role %}selected{% endif %}>Software Engineer</option>
+          <option value="Backend Engineer" {% if target_role == 'Backend Engineer' %}selected{% endif %}>Backend Engineer</option>
+          <option value="Frontend Engineer" {% if target_role == 'Frontend Engineer' %}selected{% endif %}>Frontend Engineer</option>
+          <option value="Full Stack Developer" {% if target_role == 'Full Stack Developer' %}selected{% endif %}>Full Stack Developer</option>
+          <option value="Data Scientist / AI Engineer" {% if target_role == 'Data Scientist / AI Engineer' %}selected{% endif %}>Data Scientist / AI Engineer</option>
+          <option value="DevOps &amp; Cloud Engineer" {% if target_role == 'DevOps &amp; Cloud Engineer' %}selected{% endif %}>DevOps &amp; Cloud Engineer</option>
+          <option value="System Design &amp; Architecture" {% if target_role == 'System Design &amp; Architecture' %}selected{% endif %}>System Design &amp; Architecture</option>
+          <option value="Associate Product Manager" {% if target_role == 'Associate Product Manager' %}selected{% endif %}>Associate Product Manager</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">Password <span style="font-weight: 400; font-size: 0.8rem; color: var(--text-muted);">(min. 6 characters)</span></label>
+        <div class="password-input-group">
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            class="form-control" 
+            placeholder="••••••••" 
+            required 
+            autocomplete="new-password"
+            aria-required="true"
+          >
+          <button type="button" class="password-toggle-btn" data-target="password" aria-label="Toggle password visibility">
+            👁️
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirm_password" class="form-label">Confirm Password</label>
+        <div class="password-input-group">
+          <input 
+            type="password" 
+            id="confirm_password" 
+            name="confirm_password" 
+            class="form-control" 
+            placeholder="••••••••" 
+            required 
+            autocomplete="new-password"
+            aria-required="true"
+          >
+          <button type="button" class="password-toggle-btn" data-target="confirm_password" aria-label="Toggle confirm password visibility">
+            👁️
+          </button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1.25rem;" id="auth-submit-btn">
+        <span class="spinner btn-spinner" style="display: none;" aria-hidden="true"></span>
+        <span class="btn-text">Register Account</span>
+      </button>
+    </form>
+
+    <div class="auth-footer">
+      Already have an account? 
+      <a href="{{ url_for('auth.login') }}">Log in here</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+{% endblock %}

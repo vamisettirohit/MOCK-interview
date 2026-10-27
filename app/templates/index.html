@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}AI Mock Interview Platform{% endblock %}
+
+{% block content %}
+<section style="padding: 5rem 0 3.5rem; text-align: center; position: relative;">
+  <div class="container" style="max-width: 900px;">
+    <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.3); padding: 0.4rem 1rem; border-radius: var(--radius-full); margin-bottom: 1.5rem;">
+      <span style="color: var(--accent-secondary); font-size: 0.85rem; font-weight: 600;">✨ Powered by Groq AI &amp; Llama 3</span>
+    </div>
+
+    <h1 style="margin-bottom: 1.25rem;">
+      Master Your Technical Interviews with <span style="background: var(--accent-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Instant AI Feedback</span>
+    </h1>
+
+    <p style="font-size: 1.15rem; max-width: 720px; margin: 0 auto 2.5rem; color: var(--text-secondary); line-height: 1.7;">
+      Simulate real-world technical and behavioral rounds tailored to your target role. 
+      Receive comprehensive rubric scoring, technical analysis, and actionable improvement roadmaps in real-time.
+    </p>
+
+    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+      {% if current_user %}
+        <a href="{{ url_for('interview.setup') }}" class="btn btn-primary btn-lg" id="hero-start-btn">Start Mock Interview 🚀</a>
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary btn-lg" id="hero-dash-btn">View My Dashboard</a>
+      {% else %}
+        <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg" id="hero-signup-btn">Get Started for Free 🚀</a>
+        <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-lg" id="hero-login-btn">Log In to Practice</a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<!-- Features Grid -->
+<section style="padding: 3rem 0 5rem;">
+  <div class="container">
+    <div style="text-align: center; margin-bottom: 3rem;">
+      <h2>Engineered for Interview Excellence</h2>
+      <p>Everything you need to sharpen your answers before the real interview.</p>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+      
+      <div class="glass-card interactive">
+        <div style="font-size: 2rem; margin-bottom: 1rem;">🎯</div>
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Dynamic AI Question Generation</h3>
+        <p>Groq generates unique, context-rich interview questions based on your chosen category and difficulty level without repetitive patterns.</p>
+      </div>
+
+      <div class="glass-card interactive">
+        <div style="font-size: 2rem; margin-bottom: 1rem;">📊</div>
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Detailed Rubric Evaluation</h3>
+        <p>Get evaluated on Technical Accuracy, Depth &amp; Completeness, and Communication Clarity with transparent numerical scores.</p>
+      </div>
+
+      <div class="glass-card interactive">
+        <div style="font-size: 2rem; margin-bottom: 1rem;">💡</div>
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Sample Model Answers</h3>
+        <p>Compare your answers with top-tier sample responses demonstrating how an experienced engineer would answer the question.</p>
+      </div>
+
+      <div class="glass-card interactive">
+        <div style="font-size: 2rem; margin-bottom: 1rem;">📈</div>
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Performance Tracking</h3>
+        <p>Monitor your progress across multiple sessions, identify weak technical domains, and watch your average score climb.</p>
+      </div>
+
+      <div class="glass-card interactive">
+        <div style="font-size: 2rem; margin-bottom: 1rem;">🔒</div>
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Secure &amp; Confidential</h3>
+        <p>Your passwords are cryptographically hashed and all mock sessions are stored safely in your isolated MongoDB Atlas database.</p>
+      </div>
+
+      <div class="glass-card interactive">
+        <div style="font-size: 2rem; margin-bottom: 1rem;">⚡</div>
+        <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Ultra-Fast Groq Inference</h3>
+        <p>Powered by Llama 3 models on Groq's LPUs for sub-second responses and zero awkward wait times during practice.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}

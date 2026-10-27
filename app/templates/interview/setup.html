@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+
+{% block title %}Setup Interview — Mock Interview AI{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/interview.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container setup-container">
+  <div class="setup-header">
+    <span class="badge badge-primary" style="margin-bottom: 0.75rem;">Step 1 of 2</span>
+    <h1 style="font-size: 2.25rem; margin-bottom: 0.5rem;">Configure Your Mock Session</h1>
+    <p style="color: var(--text-secondary); max-width: 620px; margin: 0 auto;">
+      Personalize your branch, job role, experience level, and track. Groq AI will dynamically synthesize realistic questions tailored to your background.
+    </p>
+  </div>
+
+  <!-- Client-side Error Alert -->
+  <div class="alert alert-danger" id="setup-error-alert" style="display: none; margin-bottom: 1.5rem;" role="alert">
+    <span>⚠️ <span id="setup-error-text"></span></span>
+  </div>
+
+  <div class="glass-card">
+    <form method="POST" action="{{ url_for('interview.setup') }}" id="interview-setup-form" novalidate>
+      
+      <!-- 1. Engineering Branch Selection -->
+      <div class="form-group">
+        <label class="form-label" style="font-size: 1rem; margin-bottom: 0.5rem;">
+          1. Select Engineering Branch
+        </label>
+        <div class="branch-grid">
+          <label class="branch-card selected">
+            <input type="radio" name="branch" value="CSE" checked required>
+            <div style="font-size: 1.25rem;">💻</div>
+            <div class="branch-code">CSE</div>
+            <div class="branch-desc">Computer Science</div>
+          </label>
+
+          <label class="branch-card">
+            <input type="radio" name="branch" value="IT" required>
+            <div style="font-size: 1.25rem;">🌐</div>
+            <div class="branch-code">IT</div>
+            <div class="branch-desc">Info Technology</div>
+          </label>
+
+          <label class="branch-card">
+            <input type="radio" name="branch" value="ECE" required>
+            <div style="font-size: 1.25rem;">📡</div>
+            <div class="branch-code">ECE</div>
+            <div class="branch-desc">Electronics &amp; Comm</div>
+          </label>
+
+          <label class="branch-card">
+            <input type="radio" name="branch" value="EEE" required>
+            <div style="font-size: 1.25rem;">⚡</div>
+            <div class="branch-code">EEE</div>
+            <div class="branch-desc">Electrical &amp; Electronics</div>
+          </label>
+
+          <label class="branch-card">
+            <input type="radio" name="branch" value="Mechanical" required>
+            <div style="font-size: 1.25rem;">⚙️</div>
+            <div class="branch-code">Mechanical</div>
+            <div class="branch-desc">Core Engineering</div>
+          </label>
+
+          <label class="branch-card">
+            <input type="radio" name="branch" value="Civil" required>
+            <div style="font-size: 1.25rem;">🏗️</div>
+            <div class="branch-code">Civil</div>
+            <div class="branch-desc">Structures &amp; Design</div>
+          </label>
+
+          <label class="branch-card" id="branch-card-other">
+            <input type="radio" name="branch" value="Other" required>
+            <div style="font-size: 1.25rem;">🎓</div>
+            <div class="branch-code">Other</div>
+            <div class="branch-desc">Custom Branch</div>
+          </label>
+        </div>
+
+        <div id="custom-branch-wrapper" class="custom-reveal-box" style="display: none;">
+          <input 
+            type="text" 
+            id="custom_branch_input" 
+            name="custom_branch" 
+            class="form-control" 
+            placeholder="Enter your specialized branch (e.g. Chemical, Biotechnology, Mechatronics)..."
+            maxlength="100"
+          >
+        </div>
+      </div>
+
+      <!-- 2. Target Job Role -->
+      <div class="form-group" style="margin-top: 2rem;">
+        <label class="form-label" style="font-size: 1rem; margin-bottom: 0.5rem;">
+          2. Target Job Role
+        </label>
+        <div class="role-grid">
+          <label class="role-card selected">
+            <input type="radio" name="job_role_radio" value="Software Developer" checked required>
+            <div style="font-size: 1.2rem;">👨‍💻</div>
+            <div class="role-title">Software Developer</div>
+          </label>
+
+          <label class="role-card">
+            <input type="radio" name="job_role_radio" value="Web Developer" required>
+            <div style="font-size: 1.2rem;">🌍</div>
+            <div class="role-title">Web Developer</div>
+          </label>
+
+          <label class="role-card">
+            <input type="radio" name="job_role_radio" value="Python Developer" required>
+            <div style="font-size: 1.2rem;">🐍</div>
+            <div class="role-title">Python Developer</div>
+          </label>
+
+          <label class="role-card">
+            <input type="radio" name="job_role_radio" value="Java Developer" required>
+            <div style="font-size: 1.2rem;">☕</div>
+            <div class="role-title">Java Developer</div>
+          </label>
+
+          <label class="role-card">
+            <input type="radio" name="job_role_radio" value="Data Analyst" required>
+            <div style="font-size: 1.2rem;">📊</div>
+            <div class="role-title">Data Analyst</div>
+          </label>
+
+          <label class="role-card">
+            <input type="radio" name="job_role_radio" value="AI/ML Engineer" required>
+            <div style="font-size: 1.2rem;">🤖</div>
+            <div class="role-title">AI/ML Engineer</div>
+          </label>
+
+          <label class="role-card" id="role-card-custom">
+            <input type="radio" name="job_role_radio" value="Custom" required>
+            <div style="font-size: 1.2rem;">✨</div>
+            <div class="role-title">Custom Role...</div>
+          </label>
+        </div>
+
+        <div id="custom-role-wrapper" class="custom-reveal-box" style="display: none;">
+          <input 
+            type="text" 
+            id="custom_role_input" 
+            name="custom_role" 
+            class="form-control" 
+            placeholder="Type your target role (e.g. Embedded Firmware Engineer, Cloud DevOps, Security Analyst)..."
+            maxlength="100"
+          >
+        </div>
+      </div>
+
+      <!-- 3. Experience Level -->
+      <div class="form-group" style="margin-top: 2rem;">
+        <label class="form-label" style="font-size: 1rem; margin-bottom: 0.5rem;">
+          3. Candidate Experience Level
+        </label>
+        <div class="exp-selector">
+          <label class="exp-btn selected">
+            <input type="radio" name="experience_level" value="Fresher" checked required>
+            <div style="font-size: 1.15rem; margin-bottom: 0.2rem;">🌱</div>
+            <div style="font-weight: 700; color: #34d399;">Fresher</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+              Campus Graduate / 0-1 Yrs
+            </div>
+          </label>
+
+          <label class="exp-btn">
+            <input type="radio" name="experience_level" value="Internship" required>
+            <div style="font-size: 1.15rem; margin-bottom: 0.2rem;">💼</div>
+            <div style="font-weight: 700; color: #38bdf8;">Internship</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+              Pre-Final / Summer Intern
+            </div>
+          </label>
+
+          <label class="exp-btn">
+            <input type="radio" name="experience_level" value="Experienced" required>
+            <div style="font-size: 1.15rem; margin-bottom: 0.2rem;">🚀</div>
+            <div style="font-weight: 700; color: #a78bfa;">Experienced</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+              1+ Years Working Professional
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- 4. Category / Interview Track Selection -->
+      <div class="form-group" style="margin-top: 2rem;">
+        <label class="form-label" style="font-size: 1rem; margin-bottom: 0.5rem;">
+          4. Choose Interview Category
+        </label>
+        <div class="category-radio-group">
+          <label class="category-card selected">
+            <input type="radio" name="category" value="Technical" checked required>
+            <div style="font-size: 1.5rem;" aria-hidden="true">💻</div>
+            <div>
+              <div class="category-title">Technical</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem;">
+                Core concepts, problem-solving, DBs &amp; architecture
+              </div>
+            </div>
+          </label>
+
+          <label class="category-card">
+            <input type="radio" name="category" value="HR" required>
+            <div style="font-size: 1.5rem;" aria-hidden="true">🤝</div>
+            <div>
+              <div class="category-title">HR &amp; Behavioral</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem;">
+                STAR method, culture fit, teamwork &amp; situational ethics
+              </div>
+            </div>
+          </label>
+
+          <label class="category-card">
+            <input type="radio" name="category" value="Aptitude" required>
+            <div style="font-size: 1.5rem;" aria-hidden="true">🧠</div>
+            <div>
+              <div class="category-title">Aptitude</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem;">
+                Logical reasoning, quantitative analysis &amp; puzzles
+              </div>
+            </div>
+          </label>
+
+          <label class="category-card">
+            <input type="radio" name="category" value="Mixed" required>
+            <div style="font-size: 1.5rem;" aria-hidden="true">⚡</div>
+            <div>
+              <div class="category-title">Mixed Track</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem;">
+                Comprehensive round blending Technical, HR &amp; Aptitude
+              </div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- 5. Difficulty Selection -->
+      <div class="form-group" style="margin-top: 2rem;">
+        <label class="form-label" style="font-size: 1rem; margin-bottom: 0.5rem;">
+          5. Target Difficulty Level
+        </label>
+        <div class="difficulty-selector">
+          <label class="difficulty-btn">
+            <input type="radio" name="difficulty" value="Beginner" required>
+            <div style="font-weight: 700; color: #34d399;">Beginner</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+              Core Foundations &amp; Concepts
+            </div>
+          </label>
+
+          <label class="difficulty-btn selected">
+            <input type="radio" name="difficulty" value="Intermediate" checked required>
+            <div style="font-weight: 700; color: #fbbf24;">Intermediate</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+              Application &amp; Problem Solving
+            </div>
+          </label>
+
+          <label class="difficulty-btn">
+            <input type="radio" name="difficulty" value="Advanced" required>
+            <div style="font-weight: 700; color: #f87171;">Advanced</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+              Complex Scenarios &amp; Trade-offs
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- 6. Question Count & Duration -->
+      <div class="two-col-controls" style="margin-top: 2rem;">
+        <div class="form-group">
+          <label for="num_questions" class="form-label">6. Number of Questions</label>
+          <select id="num_questions" name="num_questions" class="form-control">
+            <option value="3" selected>3 Questions (Quick Practice)</option>
+            <option value="5">5 Questions (Standard Round)</option>
+            <option value="7">7 Questions (In-Depth Round)</option>
+            <option value="10">10 Questions (Comprehensive Round)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="duration" class="form-label">7. Target Duration</label>
+          <select id="duration" name="duration" class="form-control">
+            <option value="10">10 Minutes (Fast Track)</option>
+            <option value="15" selected>15 Minutes (Standard Mock)</option>
+            <option value="20">20 Minutes</option>
+            <option value="30">30 Minutes (Deep Dive)</option>
+            <option value="45">45 Minutes (Full Session)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 8. Specific Focus Topic (Optional) -->
+      <div class="form-group" style="margin-top: 1.5rem;">
+        <label for="topic" class="form-label">8. Specific Focus Topic (Optional)</label>
+        <input 
+          type="text" 
+          id="topic" 
+          name="topic" 
+          class="form-control" 
+          placeholder="e.g. Operating Systems, Microservices, React Hooks, Object-Oriented Principles, STAR stories"
+          value="{{ selected_topic or '' }}"
+          maxlength="100"
+        >
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.35rem;">
+          Leave empty for broad, representative questions based on your branch and role.
+        </p>
+      </div>
+
+      <!-- Action buttons -->
+      <div style="margin-top: 2.5rem; display: flex; justify-content: flex-end; align-items: center; gap: 1rem;">
+        <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">
+          Cancel
+        </a>
+        <button type="submit" class="btn btn-primary btn-lg" id="start-session-btn">
+          <span class="spinner" id="setup-spinner" style="display: none;" aria-hidden="true"></span>
+          <span id="setup-btn-text">Generate Questions &amp; Begin Interview →</span>
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/setup.js') }}"></script>
+{% endblock %}
